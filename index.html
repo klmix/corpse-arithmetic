@@ -413,12 +413,12 @@
 
   /* ---------------- state ---------------- */
   const KEY = "corpse-arithmetic/v1";
-  const defaultSettings = () => ({ runs: 2000, pcTarget: "weakest", foeTarget: "random", initEachRound: true, morale: true, useShield: true, useOmens: true, zeroBroken: false });
+  const defaultSettings = () => ({ runs: 10000, pcTarget: "weakest", foeTarget: "random", initEachRound: true, morale: true, useShield: true, useOmens: true, zeroBroken: false });
   function defaultState() {
     const bestiary = bookCreatures();
     const berserker = bestiary.find(c => c.name === "Berserker");
     const goblin = bestiary.find(c => c.name === "Goblin");
-    return { bestiary, sel: goblin.id, encounter: [{ enemyId: berserker.id, count: 1, leader: true }, { enemyId: goblin.id, count: 2, leader: false }], party: exampleParty(), settings: defaultSettings(), newClass: "none" };
+    return { bestiary, sel: goblin.id, encounter: [{ enemyId: berserker.id, count: 1, leader: true }, { enemyId: goblin.id, count: 2, leader: false }], party: exampleParty(), settings: defaultSettings(), settingsV: 2, newClass: "none" };
   }
   function load() {
     try {
@@ -433,6 +433,8 @@
     s.party = s.party.map(p => pc(p));
     s.encounter = s.encounter.filter(e => s.bestiary.some(c => c.id === e.enemyId));
     s.settings = { ...defaultSettings(), ...(s.settings || {}) };
+    // Saved setups from before the default rose to 10,000 still carry the old 2,000.
+    if (!s.settingsV) { if (+s.settings.runs === 2000) s.settings.runs = 10000; s.settingsV = 2; }
     s.newClass = s.newClass || "none";
     if (!s.bestiary.some(c => c.id === s.sel)) s.sel = s.bestiary[0]?.id;
     return s;
@@ -698,7 +700,7 @@
   const findCreatureIn = (state, id) => state.bestiary.find(c => c.id === id);
 
   function runMany(state) {
-    const n = Math.max(1, Math.min(50000, Math.floor(+state.settings.runs || 2000)));
+    const n = Math.max(1, Math.min(50000, Math.floor(+state.settings.runs || 10000)));
     const P = state.party.length;
     const agg = { n, win: 0, winBroke: 0, loss: 0, stale: 0, anyDeath: 0, deaths: 0, rounds: 0, hist: Array(P + 1).fill(0), pcs: state.party.map(() => ({ dead: 0, broken: 0, hemo: 0, lostAll: 0, lostSurv: 0, surv: 0, linger: {} })) };
     for (let i = 0; i < n; i++) {
@@ -905,7 +907,7 @@
     $("#settings").innerHTML = `
       <div data-scope="set">
         <div class="settings">
-          <label class="field"><span>Fights to simulate</span><select class="inp" id="s-runs" data-k="runs" data-t="num">${[500, 2000, 5000, 20000].map(v => `<option value="${v}"${+s.runs === v ? " selected" : ""}>${v.toLocaleString("en")}</option>`).join("")}</select></label>
+          <label class="field"><span>Fights to simulate</span><select class="inp" id="s-runs" data-k="runs" data-t="num">${[500, 2000, 5000, 10000, 20000].map(v => `<option value="${v}"${+s.runs === v ? " selected" : ""}>${v.toLocaleString("en")}</option>`).join("")}</select></label>
           <label class="field"><span>Initiative</span><select class="inp" id="s-init" data-k="initEachRound" data-t="bool"><option value="true"${s.initEachRound ? " selected" : ""}>Rolled every round</option><option value="false"${!s.initEachRound ? " selected" : ""}>Rolled once</option></select></label>
           <label class="field"><span>Party strikes</span><select class="inp" id="s-pcTarget" data-k="pcTarget">${opts({ weakest: "The weakest foe", random: "A random foe" }, s.pcTarget)}</select></label>
           <label class="field"><span>Enemies strike</span><select class="inp" id="s-foeTarget" data-k="foeTarget">${opts({ random: "A random PC", weakest: "The weakest PC" }, s.foeTarget)}</select></label>
