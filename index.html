@@ -1,0 +1,1142 @@
+<title>Corpse Arithmetic</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=UnifrakturCook:wght@700&display=swap">
+<style>
+  :root {
+    --paper: #F1F1EC;
+    --paper-deep: #E3E3DA;
+    --ink: #121211;
+    --ink-soft: #5A5A52;
+    --rule-soft: #C2C2B7;
+    --yellow: #FFE600;
+    --blood: #B8141B;
+    --slab: #0F0F0E;
+    --slab-ink: #F1F1EC;
+    --slab-soft: #9D9D93;
+    --slab-rule: #34342F;
+    --slab-blood: #FF4B3E;
+    --display: "UnifrakturCook", "Old English Text MT", "Times New Roman", serif;
+    --body: "Archivo Narrow", "Arial Narrow", "Roboto Condensed", "Helvetica Neue", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 400 15px/1.45 var(--body); }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  .wrap { max-width: 1480px; margin: 0 auto; padding-inline: clamp(16px, 3vw, 40px); padding-block: 20px 72px; }
+
+  /* ---------- masthead ---------- */
+  .mast { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 16px 40px; align-items: end; padding-bottom: 18px; border-bottom: 6px solid var(--ink); }
+  .eyebrow { margin: 0 0 4px; font: 600 12px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; }
+  .mast h1 { margin: 0; font: 700 clamp(46px, 6.4vw, 92px)/.86 var(--display); letter-spacing: -.01em; }
+  .mast-lede { margin: 0; max-width: 46ch; font-size: 17px; line-height: 1.35; text-wrap: pretty; }
+  .mast-rules { margin: 0; display: grid; grid-template-columns: repeat(2, auto); gap: 2px 18px; font: 500 12px/1.5 var(--mono); }
+  .mast-rules div { display: flex; gap: 8px; border-bottom: 1px solid var(--ink); }
+  .mast-rules dt { text-transform: uppercase; letter-spacing: .08em; color: var(--ink-soft); min-width: 7ch; }
+  .mast-rules dd { margin: 0; }
+  @media (max-width: 980px) { .mast { grid-template-columns: 1fr; } }
+
+  /* ---------- page grid ---------- */
+  .grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(380px, 470px); gap: 36px; align-items: start; margin-top: 28px; }
+  .work { display: grid; grid-template-columns: minmax(0, 1fr); gap: 44px; min-width: 0; }
+  .work > section { min-width: 0; }
+  @media (max-width: 1100px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+
+  .sec-head { display: grid; grid-template-columns: auto 1fr; column-gap: 14px; align-items: baseline; border-bottom: 2px solid var(--ink); padding-bottom: 6px; margin-bottom: 16px; }
+  .sec-num { font: 600 13px/1 var(--mono); padding: 5px 7px 4px; background: var(--ink); color: var(--paper); align-self: center; }
+  .sec-head h2 { margin: 0; font: 700 38px/1 var(--display); }
+  .sec-note { grid-column: 2; margin: 2px 0 0; color: var(--ink-soft); max-width: 70ch; }
+
+  /* ---------- controls ---------- */
+  .btn { display: inline-flex; align-items: center; gap: 6px; border: 2px solid var(--ink); background: var(--ink); color: var(--paper); padding: 6px 12px 5px; font: 600 13px/1.1 var(--body); letter-spacing: .08em; text-transform: uppercase; cursor: pointer; }
+  .btn:hover { color: var(--yellow); }
+  .btn.ghost { background: transparent; color: var(--ink); }
+  .btn.ghost:hover { background: var(--yellow); color: var(--ink); }
+  .btn.small { padding: 3px 8px 2px; font-size: 11.5px; }
+  .btn.danger:hover { background: var(--blood); border-color: var(--blood); color: var(--paper); }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  :focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+
+  .field { display: grid; gap: 2px; min-width: 0; }
+  .field > span { font: 600 10.5px/1.2 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); white-space: nowrap; }
+  .inp { width: 100%; min-width: 0; border: 0; border-bottom: 1.5px solid var(--ink); background: transparent; padding: 3px 2px 2px; font: 500 15px/1.3 var(--mono); border-radius: 0; font-variant-numeric: tabular-nums; }
+  .inp:focus { outline: none; background: var(--yellow); }
+  .inp.bad { color: var(--blood); border-bottom-color: var(--blood); background: #F6D9D6; }
+  select.inp { font-family: var(--body); font-size: 15px; cursor: pointer; }
+  .inp.name { font: 600 22px/1.2 var(--body); }
+  .check { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; user-select: none; }
+  .check input { accent-color: var(--ink); width: 15px; height: 15px; margin: 0; }
+
+  /* ---------- bestiary ---------- */
+  .bestiary { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 24px; align-items: start; }
+  @media (max-width: 900px) { .bestiary { grid-template-columns: minmax(0, 1fr); } .creature-list { max-height: 320px; } }
+  .editor > * { min-width: 0; }
+  .creature-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--ink); max-height: 640px; overflow: auto; }
+  .creature { display: grid; gap: 1px; width: 100%; text-align: left; background: transparent; border: 0; border-bottom: 1px solid var(--ink); padding: 7px 6px 6px; cursor: pointer; }
+  .creature:hover { background: var(--paper-deep); }
+  .creature.is-sel { background: var(--yellow); }
+  .cname { font-weight: 600; font-size: 16px; }
+  .cline { font: 400 11.5px/1.35 var(--mono); color: var(--ink-soft); }
+  .creature.is-sel .cline { color: var(--ink); }
+  .list-foot { margin-top: 10px; }
+
+  .editor { display: grid; gap: 18px; min-width: 0; }
+  .statline { display: grid; grid-template-columns: repeat(auto-fill, minmax(116px, 1fr)); gap: 12px 16px; padding: 12px 0 14px; border-block: 2px solid var(--ink); }
+  .sub { font: 600 11px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; margin: 0 0 6px; }
+  .table-scroll { overflow-x: auto; }
+  table.attacks { border-collapse: collapse; width: 100%; min-width: 760px; }
+  table.attacks th { text-align: left; font: 600 10.5px/1.2 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); padding: 0 8px 4px 0; border-bottom: 1px solid var(--ink); white-space: nowrap; }
+  table.attacks td { padding: 6px 8px 6px 0; border-bottom: 1px solid var(--rule-soft); vertical-align: bottom; }
+  .muted { color: var(--ink-soft); }
+  .specials { display: grid; gap: 10px; }
+  .special { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; min-width: 0; }
+  .special > * { min-width: 0; }
+  .special .check { display: inline; }
+  .special .check input { vertical-align: -2px; margin-right: 6px; }
+  .special .inp { width: 64px; }
+  .editor-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; }
+  .tag { font: 500 11px/1 var(--mono); padding: 3px 5px; border: 1px solid var(--ink); }
+
+  /* ---------- encounter ---------- */
+  .enc-rows { display: grid; border-top: 1px solid var(--ink); }
+  .enc-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; gap: 14px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--ink); }
+  .stepper { display: inline-flex; align-items: stretch; border: 2px solid var(--ink); }
+  .stepper button { width: 28px; border: 0; background: var(--ink); color: var(--paper); cursor: pointer; font: 600 16px/1 var(--mono); }
+  .stepper button:hover { color: var(--yellow); }
+  .stepper input { width: 42px; border: 0; text-align: center; background: var(--paper); font: 600 16px/1 var(--mono); -moz-appearance: textfield; }
+  .stepper input::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .stepper input:focus { outline: none; background: var(--yellow); }
+  .enc-name select { font: 600 18px/1.2 var(--body); }
+  .enc-line { display: block; font: 400 11.5px/1.3 var(--mono); color: var(--ink-soft); }
+  .enc-summary { margin: 12px 0 0; font: 500 13px/1.5 var(--mono); }
+  .enc-summary b { background: var(--yellow); padding: 0 3px; font-weight: 600; }
+  .enc-add { margin-top: 12px; }
+  .enc-add select { width: auto; min-width: 200px; }
+  @media (max-width: 560px) { .enc-row { grid-template-columns: auto minmax(0, 1fr); } }
+
+  /* ---------- party ---------- */
+  .party { display: grid; gap: 0; border-top: 2px solid var(--ink); }
+  .pc { display: grid; grid-template-columns: minmax(150px, 210px) minmax(0, 1fr) auto; gap: 10px 22px; padding: 12px 0 14px; border-bottom: 1px solid var(--ink); align-items: start; }
+  .pc-id { display: grid; gap: 2px; }
+  .pc-cls { font: 400 11.5px/1.2 var(--mono); color: var(--ink-soft); }
+  .pc-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 10px 14px; }
+  .pc-fields .wide { grid-column: span 2; }
+  .pc-actions { display: grid; gap: 6px; }
+  @media (max-width: 760px) { .pc { grid-template-columns: minmax(0, 1fr); } .pc-actions { display: flex; } }
+  .party-add { margin-top: 14px; }
+  .party-add select { width: auto; min-width: 190px; }
+
+  details.io { margin-top: 8px; border-top: 1px solid var(--ink); padding-top: 10px; }
+  details.io summary { cursor: pointer; font: 600 12px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; }
+  details.io textarea { width: 100%; min-height: 120px; margin: 10px 0 8px; border: 1.5px solid var(--ink); background: var(--paper); font: 400 12px/1.4 var(--mono); padding: 8px; }
+
+  /* ---------- verdict slab ---------- */
+  .verdict { position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow: auto; background: var(--slab); color: var(--slab-ink); padding: 20px 22px 26px; min-width: 0; scrollbar-color: var(--slab-rule) var(--slab); }
+  @media (max-width: 1100px) { .verdict { position: static; max-height: none; } }
+  .verdict .sec-head { border-bottom-color: var(--slab-ink); }
+  .verdict .sec-num { background: var(--yellow); color: var(--slab); }
+  .verdict .sec-head h2 { color: var(--yellow); }
+  .settings { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 14px; margin-bottom: 12px; }
+  .settings .field > span { color: var(--slab-soft); }
+  .verdict .inp { border-bottom-color: var(--slab-soft); color: var(--slab-ink); }
+  .verdict select.inp option { color: var(--ink); background: var(--paper); }
+  .verdict .inp:focus { background: var(--yellow); color: var(--slab); }
+  .verdict :focus-visible { outline-color: var(--yellow); }
+  .verdict details.rules summary { cursor: pointer; font: 600 11.5px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--slab-soft); padding: 6px 0; }
+  .verdict details.rules[open] summary { color: var(--slab-ink); }
+  .toggles { display: grid; gap: 7px; padding: 6px 0 12px; }
+  .toggles .check input { accent-color: var(--yellow); }
+  .toggles small { display: block; color: var(--slab-soft); font-size: 12.5px; margin-left: 21px; line-height: 1.3; }
+  .run { width: 100%; justify-content: center; background: var(--yellow); color: var(--slab); border-color: var(--yellow); font-size: 14px; padding: 9px 12px 8px; }
+  .run:hover { background: var(--slab-ink); border-color: var(--slab-ink); color: var(--slab); }
+
+  .headline { margin: 20px 0 14px; font: 500 21px/1.28 var(--body); text-wrap: balance; }
+  .headline b { color: var(--yellow); font-weight: 700; }
+  .headline b.dead { color: var(--slab-blood); }
+  .figures { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 1px solid var(--slab-rule); }
+  .fig { padding: 10px 0 12px; border-bottom: 1px solid var(--slab-rule); }
+  .fig:nth-child(odd) { padding-right: 12px; border-right: 1px solid var(--slab-rule); }
+  .fig:nth-child(even) { padding-left: 14px; }
+  .fig-v { font: 600 38px/1 var(--mono); font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+  .fig-v.y { color: var(--yellow); }
+  .fig-v.r { color: var(--slab-blood); }
+  .fig-l { font: 500 12px/1.25 var(--mono); color: var(--slab-soft); text-transform: uppercase; letter-spacing: .06em; margin-top: 5px; }
+
+  .block { margin-top: 22px; }
+  .block h3 { margin: 0 0 8px; font: 600 11.5px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--slab-soft); }
+  .stack { display: flex; height: 18px; background: var(--slab-rule); }
+  .stack span { display: block; height: 100%; }
+  .s-kill { background: var(--yellow); }
+  .s-broke { background: repeating-linear-gradient(135deg, var(--yellow) 0 4px, #8C7F00 4px 7px); }
+  .s-loss { background: var(--slab-blood); }
+  .s-stale { background: var(--slab-soft); }
+  .legend { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 12px; margin-top: 8px; font: 400 12px/1.3 var(--mono); }
+  .legend i { display: inline-block; width: 10px; height: 10px; margin-right: 6px; vertical-align: -1px; }
+  .legend b { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  .hist { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 6px; align-items: end; height: 132px; border-bottom: 1px solid var(--slab-ink); }
+  .hbar { display: flex; flex-direction: column; justify-content: flex-end; align-items: stretch; height: 100%; gap: 3px; }
+  .hbar .val { font: 500 11px/1 var(--mono); text-align: center; color: var(--slab-ink); font-variant-numeric: tabular-nums; }
+  .hbar .bar { background: var(--slab-ink); min-height: 1px; }
+  .hbar.zero .bar { background: var(--yellow); }
+  .hbar.some .bar { background: var(--slab-blood); }
+  .hlabels { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 6px; margin-top: 4px; font: 500 11px/1 var(--mono); text-align: center; color: var(--slab-soft); }
+
+  table.pcs { width: 100%; border-collapse: collapse; font: 400 13px/1.3 var(--mono); font-variant-numeric: tabular-nums; }
+  table.pcs th { text-align: right; font-weight: 500; font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--slab-soft); padding: 0 0 5px 8px; border-bottom: 1px solid var(--slab-ink); }
+  table.pcs th:first-child, table.pcs td:first-child { text-align: left; padding-left: 0; }
+  table.pcs td { text-align: right; padding: 7px 0 7px 8px; border-bottom: 1px solid var(--slab-rule); vertical-align: top; }
+  table.pcs td.nm { font-family: var(--body); font-size: 15px; font-weight: 600; }
+  table.pcs td.r { color: var(--slab-blood); }
+  .lossbar { height: 4px; background: var(--slab-rule); margin-top: 4px; }
+  .lossbar span { display: block; height: 100%; background: var(--yellow); }
+  .afflict { margin: 8px 0 0; font: 400 12px/1.45 var(--mono); color: var(--slab-soft); }
+  .afflict b { color: var(--slab-ink); font-weight: 500; }
+  .foot-stats { display: flex; flex-wrap: wrap; gap: 4px 18px; font: 400 12px/1.4 var(--mono); color: var(--slab-soft); margin-top: 10px; }
+  .foot-stats b { color: var(--slab-ink); font-weight: 500; }
+
+  .log-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .verdict .btn.ghost { color: var(--slab-ink); border-color: var(--slab-ink); }
+  .verdict .btn.ghost:hover { background: var(--yellow); color: var(--slab); border-color: var(--yellow); }
+  .log { margin: 10px 0 0; padding: 0; list-style: none; font: 400 12px/1.45 var(--mono); max-height: 380px; overflow: auto; border-top: 1px solid var(--slab-rule); }
+  .log li { padding: 2px 0; }
+  .log li.round { margin-top: 8px; padding-top: 6px; border-top: 1px dashed var(--slab-rule); color: var(--yellow); font-weight: 600; text-transform: uppercase; letter-spacing: .08em; font-size: 11px; }
+  .log li.death { color: var(--slab-blood); font-weight: 600; }
+  .log li.broken { color: #FF9A8F; }
+  .log li.kill { color: var(--slab-ink); font-weight: 600; }
+  .log li.save, .log li.morale { color: var(--yellow); }
+  .log li.plain { color: var(--slab-soft); }
+  .log li.end { margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--slab-ink); color: var(--slab-ink); font-weight: 600; }
+  .empty { margin: 18px 0; color: var(--slab-soft); font-size: 16px; }
+
+  .colophon { margin-top: 48px; padding-top: 12px; border-top: 2px solid var(--ink); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px 40px; font-size: 13.5px; color: var(--ink-soft); }
+  .colophon p { margin: 0; max-width: 70ch; }
+  @media (max-width: 760px) { .colophon { grid-template-columns: 1fr; } }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header class="mast">
+    <div>
+      <p class="eyebrow">Encounter odds for MÖRK BORG</p>
+      <h1>Corpse Arithmetic</h1>
+    </div>
+    <p class="mast-lede">Stat a creature, build the encounter, and throw your party at it a few thousand times. Count what crawls back.</p>
+    <dl class="mast-rules">
+      <div><dt>Test</dt><dd>d20 ± ability ≥ DR</dd></div>
+      <div><dt>0 HP</dt><dd>Broken</dd></div>
+      <div><dt>Enemies</dt><dd>never roll</dd></div>
+      <div><dt>&lt; 0 HP</dt><dd>Dead</dd></div>
+    </dl>
+  </header>
+
+  <div class="grid">
+    <main class="work">
+      <section id="sec-bestiary" aria-labelledby="h-bestiary">
+        <header class="sec-head">
+          <span class="sec-num">I</span><h2 id="h-bestiary">Bestiary</h2>
+          <p class="sec-note">The book's creatures are loaded and editable. Stat your own with dice notation: <span class="tag">d4</span> <span class="tag">2d6</span> <span class="tag">d4+1</span></p>
+        </header>
+        <div class="bestiary">
+          <div>
+            <ul class="creature-list" id="creatureList"></ul>
+            <div class="row list-foot">
+              <button class="btn small" data-act="newCreature" id="btn-new-creature">New creature</button>
+              <button class="btn small ghost" data-act="resetBook" id="btn-reset-book">Restore book creatures</button>
+            </div>
+          </div>
+          <div class="editor" id="editor"></div>
+        </div>
+      </section>
+
+      <section id="sec-encounter" aria-labelledby="h-encounter">
+        <header class="sec-head">
+          <span class="sec-num">II</span><h2 id="h-encounter">Encounter</h2>
+          <p class="sec-note">Who waits in the dark. Mark a leader: if it falls, the rest check Morale.</p>
+        </header>
+        <div id="encounter"></div>
+      </section>
+
+      <section id="sec-party" aria-labelledby="h-party">
+        <header class="sec-head">
+          <span class="sec-num">III</span><h2 id="h-party">Party</h2>
+          <p class="sec-note">Abilities run −3 to +6. DR modifiers cover class quirks: a Gutterborn Scum defends at −2, for example.</p>
+        </header>
+        <div class="party" id="party"></div>
+        <div class="row party-add">
+          <select class="inp" id="newPcClass" aria-label="Class for new character"></select>
+          <button class="btn" data-act="pcAdd" id="btn-pc-add">Roll a new wanderer</button>
+        </div>
+        <details class="io">
+          <summary>Save or share this setup</summary>
+          <textarea id="ioText" spellcheck="false" aria-label="Setup as JSON" placeholder="Click “Copy setup here”, or paste a saved setup and click “Load setup”."></textarea>
+          <div class="row">
+            <button class="btn small" data-act="exportJson" id="btn-export">Copy setup here</button>
+            <button class="btn small ghost" data-act="importJson" id="btn-import">Load setup</button>
+            <span class="muted" id="ioMsg" role="status"></span>
+          </div>
+        </details>
+      </section>
+    </main>
+
+    <aside class="verdict" aria-labelledby="h-verdict">
+      <header class="sec-head">
+        <span class="sec-num">IV</span><h2 id="h-verdict">Verdict</h2>
+      </header>
+      <div id="settings"></div>
+      <div id="results" aria-live="polite"></div>
+    </aside>
+  </div>
+
+  <footer class="colophon">
+    <p><strong>Rules modelled:</strong> side initiative, melee on Strength and ranged on Presence, Agility defence, crits and fumbles, armor tiers and their Agility penalty, shields, Omens, the Broken table, hemorrhage, Morale, and creature specials such as extra attacks, fear, ambush, paralysis, drain and lingering curses.</p>
+    <p><strong>Not modelled:</strong> Powers and scrolls, fleeing player characters, healing during the fight, ammunition, and most class abilities beyond DR modifiers. Anyone who hemorrhages survives only if the party wins and can treat them.</p>
+  </footer>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  const $ = (s, r = document) => r.querySelector(s);
+  const uid = () => Math.random().toString(36).slice(2, 9);
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const die = s => 1 + Math.floor(Math.random() * s);
+
+  /* ---------------- dice ---------------- */
+  const diceCache = new Map();
+  function parseDice(src) {
+    const key = String(src ?? "").replace(/\s+/g, "").toLowerCase();
+    if (diceCache.has(key)) return diceCache.get(key);
+    const terms = [];
+    let ok = key.length > 0;
+    for (const t of key.match(/[+-]?[^+-]+/g) || []) {
+      const sign = t[0] === "-" ? -1 : 1;
+      const body = t.replace(/^[+-]/, "");
+      const m = body.match(/^(\d*)d(\d+)$/);
+      if (m && +m[2] > 0) terms.push({ sign, n: m[1] === "" ? 1 : +m[1], s: +m[2] });
+      else if (/^\d+$/.test(body)) terms.push({ sign, c: +body });
+      else ok = false;
+    }
+    if (!terms.length) ok = false;
+    const res = { ok, terms };
+    diceCache.set(key, res);
+    return res;
+  }
+  function roll(src) {
+    const d = parseDice(src);
+    if (!d.ok) return 0;
+    let t = 0;
+    for (const x of d.terms) {
+      if (x.c != null) t += x.sign * x.c;
+      else for (let i = 0; i < x.n; i++) t += x.sign * die(x.s);
+    }
+    return t;
+  }
+  function diceAvg(src) {
+    const d = parseDice(src);
+    if (!d.ok) return 0;
+    return d.terms.reduce((a, x) => a + x.sign * (x.c != null ? x.c : x.n * (x.s + 1) / 2), 0);
+  }
+
+  /* ---------------- book data ---------------- */
+  const ARMOR_DIE = [0, 2, 4, 6];
+  const ARMOR_SHORT = ["No armor", "−d2", "−d4", "−d6"];
+  const ARMOR_LONG = ["No armor", "Light (−d2)", "Medium (−d4)", "Heavy (−d6)"];
+  const NAMES = "Aerg-Tval Agn Arvant Belsum Belum Brint Börda Daeru Eldar Felban Gotven Graft Grin Grittr Haerü Hargha Harmug Jotna Karg Karva Katla Keftar Klort Kratar Kutz Kvetin Lygan Margar Merkari Nagl Niduk Nifehl Prügl Qillnach Risten Svind Theras Therg Torvul Törn Urm Urvarg Vagal Vatan Von Vrakh Vresi Wemut".split(" ");
+  const WEAPONS = [["Femur", "d4"], ["Staff", "d4"], ["Shortsword", "d4"], ["Knife", "d4"], ["Warhammer", "d6"], ["Sword", "d6"], ["Bow", "d6", true], ["Flail", "d8"], ["Crossbow", "d8", true], ["Zweihänder", "d10"]];
+  const CLASSES = {
+    none: { label: "No class", hp: 8, weapon: 10, armor: 4, omens: 2, mods: {} },
+    deserter: { label: "Fanged deserter", hp: 10, weapon: 10, armor: 4, omens: 2, mods: { str: 2, agi: -1, pre: -1 } },
+    scum: { label: "Gutterborn scum", hp: 6, weapon: 6, armor: 2, omens: 2, mods: { str: -2 }, defMod: -2, rangedMod: -2 },
+    hermit: { label: "Esoteric hermit", hp: 4, weapon: 4, armor: 2, omens: 4, mods: { pre: 2, str: -2 } },
+    royalty: { label: "Wretched royalty", hp: 6, weapon: 8, armor: 3, omens: 2, mods: {} },
+    priest: { label: "Heretical priest", hp: 8, weapon: 8, armor: 4, omens: 4, mods: { pre: 2, str: -2 } },
+    herbmaster: { label: "Occult herbmaster", hp: 6, weapon: 6, armor: 2, omens: 2, mods: { tou: 2, str: -2 } },
+  };
+  const EFFECTS = { none: "Nothing more", damage: "Extra damage", stun: "Helpless (rounds)", hold: "Paralysed until tested free", drain: "Drain STR/AGI/PRE −1", linger: "Lingering affliction" };
+  const TESTS = { none: "No save", toughness: "Toughness", agility: "Agility", presence: "Presence", strength: "Strength", chance: "% chance" };
+  const TEST_AB = { toughness: "tou", agility: "agi", presence: "pre", strength: "str" };
+
+  const atk = (name, dmg, extra = {}) => Object.assign({ id: uid(), name, dmg, weight: 1, alwaysHits: false, effect: fx("none") }, extra);
+  function fx(type, test = "toughness", dr = 12, amount = "d4", label = "") { return { type, test, dr, amount, label }; }
+  function creature(o) {
+    return Object.assign({
+      id: uid(), name: "Nameless thing", source: "", hp: "8", morale: 7, armor: 0, hitDR: 12, defDR: 12, perRound: 1,
+      weaponMode: "each", alwaysFirst: false, fragile: 0,
+      fear: { on: false, dr: 12, rounds: "d4" }, ambush: { on: false, dr: 14, bonus: 3 },
+      attacks: [atk("Claw", "d4")],
+    }, o);
+  }
+  const bookCreatures = () => [
+    creature({ name: "Goblin", source: "p. 58", hp: "6", morale: 7, armor: 1, hitDR: 14, defDR: 14, attacks: [atk("Knife / shortbow", "d4", { effect: fx("linger", "none", 0, "", "goblin curse") })] }),
+    creature({ name: "Scum", source: "p. 58", hp: "7", morale: 8, ambush: { on: true, dr: 14, bonus: 3 }, attacks: [atk("Poisoned knife", "d4", { effect: fx("linger", "toughness", 10, "", "infected") })] }),
+    creature({ name: "Berserker", source: "p. 59", hp: "13", morale: 9, armor: 1, hitDR: 10, perRound: 2, weaponMode: "once", attacks: [atk("Long flail", "d8"), atk("Heavy mace", "d6"), atk("Chained sword", "d6"), atk("Huge warhammer", "d10")] }),
+    creature({ name: "Wraith", source: "p. 59", hp: "15", morale: null, hitDR: 14, alwaysFirst: true, attacks: [atk("Touch", "d4", { effect: fx("drain", "none", 0) })] }),
+    creature({ name: "Blood-drenched skeleton", source: "p. 60", hp: "7", morale: 8, fragile: 5, attacks: [atk("Shortsword", "d4")] }),
+    creature({ name: "Lich", source: "p. 60", hp: "15", morale: null, armor: 2, attacks: [atk("Paralyzing strike", "d6", { effect: fx("hold", "presence", 14) })] }),
+    creature({ name: "Troll", source: "p. 60", hp: "32", morale: 7, armor: 1, hitDR: 10, attacks: [atk("Fist", "2d6")] }),
+    creature({ name: "Zombie", source: "p. 61", hp: "7", morale: null, armor: 1, attacks: [atk("Claw / bite", "d2", { effect: fx("linger", "toughness", 8, "", "zombie bite") })] }),
+    creature({ name: "Lady Porcelain", source: "p. 61", hp: "11", morale: null, armor: 1, fear: { on: true, dr: 12, rounds: "d4" }, attacks: [atk("Claws / piercing bite", "d4")] }),
+    creature({ name: "Grotesque", source: "p. 62", hp: "18", morale: null, armor: 3, hitDR: 10, attacks: [atk("Claws", "d6", { weight: 2 }), atk("Terrifying gaze", "d8", { weight: 1, alwaysHits: true })] }),
+    creature({ name: "Wickhead knife-wielder", source: "p. 62", hp: "10", morale: 7, attacks: [atk("Knife with dried blood", "d4", { effect: fx("linger", "chance", 25, "", "infected") })] }),
+    creature({ name: "Wyvern", source: "p. 62", hp: "25", morale: 10, armor: 2, attacks: [atk("Bite", "d6", { weight: 3 }), atk("Venomous sting", "d6", { weight: 2, effect: fx("stun", "toughness", 14, "99") })] }),
+  ];
+  function pc(o) {
+    return Object.assign({ id: uid(), name: "Wanderer", cls: "No class", hp: 8, str: 0, agi: 0, pre: 0, tou: 0, weaponName: "Sword", weapon: "d6", ranged: false, armor: 1, shield: false, omens: 1, atkMod: 0, defMod: 0 }, o);
+  }
+  const exampleParty = () => [
+    pc({ name: "Nagl", cls: "Fanged deserter", hp: 11, str: 2, agi: -1, pre: -1, tou: 1, weaponName: "Flail", weapon: "d8", armor: 2, omens: 1 }),
+    pc({ name: "Katla", cls: "Gutterborn scum", hp: 6, str: -1, agi: 1, pre: 1, tou: 0, weaponName: "Knife", weapon: "d4", armor: 1, defMod: -2, omens: 2 }),
+    pc({ name: "Vresi", cls: "Heretical priest", hp: 7, str: -1, agi: 0, pre: 2, tou: 0, weaponName: "Bow", weapon: "d6", ranged: true, armor: 0, omens: 3 }),
+    pc({ name: "Törn", cls: "Wretched royalty", hp: 9, str: 1, agi: 0, pre: 0, tou: 1, weaponName: "Sword", weapon: "d6", armor: 2, shield: true, omens: 1 }),
+  ];
+  const abilityFromSum = s => s <= 4 ? -3 : s <= 6 ? -2 : s <= 8 ? -1 : s <= 12 ? 0 : s <= 14 ? 1 : s <= 16 ? 2 : 3;
+  function rollPC(key) {
+    const k = CLASSES[key] || CLASSES.none;
+    const ab = {};
+    for (const a of ["str", "agi", "pre", "tou"]) ab[a] = abilityFromSum(die(6) + die(6) + die(6) + (k.mods[a] || 0));
+    if (key === "none") {
+      const pick = ["str", "agi", "pre", "tou"].sort(() => Math.random() - .5).slice(0, 2);
+      for (const a of pick) { const d = [die(6), die(6), die(6), die(6)].sort((x, y) => x - y); ab[a] = abilityFromSum(d[1] + d[2] + d[3]); }
+    }
+    const [wn, wd, ranged] = WEAPONS[die(k.weapon) - 1];
+    return pc({
+      name: NAMES[die(NAMES.length) - 1], cls: k.label, ...ab, hp: Math.max(1, ab.tou + die(k.hp)),
+      weaponName: wn, weapon: wd, ranged: !!ranged, armor: die(k.armor) - 1, shield: die(12) === 9,
+      omens: die(k.omens), defMod: k.defMod || 0, atkMod: ranged ? (k.rangedMod || 0) : 0,
+    });
+  }
+
+  /* ---------------- state ---------------- */
+  const KEY = "corpse-arithmetic/v1";
+  const defaultSettings = () => ({ runs: 2000, pcTarget: "weakest", foeTarget: "random", initEachRound: true, morale: true, useShield: true, useOmens: true, zeroBroken: false });
+  function defaultState() {
+    const bestiary = bookCreatures();
+    const berserker = bestiary.find(c => c.name === "Berserker");
+    const goblin = bestiary.find(c => c.name === "Goblin");
+    return { bestiary, sel: goblin.id, encounter: [{ enemyId: berserker.id, count: 1, leader: true }, { enemyId: goblin.id, count: 2, leader: false }], party: exampleParty(), settings: defaultSettings(), newClass: "none" };
+  }
+  function load() {
+    try {
+      const raw = localStorage.getItem(KEY);
+      if (raw) return normalise(JSON.parse(raw));
+    } catch (e) { /* storage unavailable */ }
+    return defaultState();
+  }
+  function normalise(s) {
+    if (!s || !Array.isArray(s.bestiary) || !Array.isArray(s.party) || !Array.isArray(s.encounter)) throw new Error("That setup is missing its bestiary, party or encounter.");
+    s.bestiary = s.bestiary.map(c => creature({ ...c, fear: { ...creature({}).fear, ...(c.fear || {}) }, ambush: { ...creature({}).ambush, ...(c.ambush || {}) }, attacks: (c.attacks || []).map(a => atk(a.name, a.dmg, { ...a, effect: { ...fx("none"), ...(a.effect || {}) } })) }));
+    s.party = s.party.map(p => pc(p));
+    s.encounter = s.encounter.filter(e => s.bestiary.some(c => c.id === e.enemyId));
+    s.settings = { ...defaultSettings(), ...(s.settings || {}) };
+    s.newClass = s.newClass || "none";
+    if (!s.bestiary.some(c => c.id === s.sel)) s.sel = s.bestiary[0]?.id;
+    return s;
+  }
+  let st = load();
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) { /* ignore */ } }
+  const findCreature = id => st.bestiary.find(c => c.id === id);
+
+  /* ---------------- simulation ---------------- */
+  function pickAttack(def) {
+    const list = def.attacks || [];
+    if (!list.length) return null;
+    const tot = list.reduce((a, x) => a + Math.max(0, +x.weight || 0), 0);
+    if (tot <= 0) return list[0];
+    let r = Math.random() * tot;
+    for (const a of list) { r -= Math.max(0, +a.weight || 0); if (r < 0) return a; }
+    return list[list.length - 1];
+  }
+
+  function simulate(state, withLog) {
+    const L = withLog ? [] : null;
+    const o = state.settings;
+    let R = 0;
+    const log = (t, k = "plain") => { if (L) L.push({ t, k }); };
+
+    const foes = [];
+    state.encounter.forEach((en, g) => {
+      const def = findCreatureIn(state, en.enemyId);
+      if (!def) return;
+      const n = Math.max(0, Math.floor(+en.count || 0));
+      for (let i = 0; i < n; i++) {
+        const hp = Math.max(1, roll(def.hp));
+        foes.push({ def, g, name: n > 1 ? `${def.name} ${i + 1}` : def.name, hp, max: hp, armor: +def.armor || 0, state: "up", leader: !!en.leader && i === 0, weapon: def.weaponMode === "once" ? pickAttack(def) : null });
+      }
+    });
+    const pcs = state.party.map(p => ({ p, name: p.name || "Nameless", hp: Math.max(1, +p.hp || 1), max: Math.max(1, +p.hp || 1), state: "up", down: 0, stun: 0, hold: null, frozen: 0, drain: 0, armor: +p.armor || 0, shield: !!p.shield, omens: Math.max(0, +p.omens || 0), weapon: p.weapon, broke: false, hemo: false, maimed: false, linger: new Set() }));
+
+    const abil = (x, a) => (+x.p[a] || 0) - (a === "tou" ? 0 : x.drain);
+    const test = (x, a, dr) => { const nat = die(20); const d = x.hemo ? 16 : dr; return { nat, ok: nat === 20 || (nat !== 1 && nat + abil(x, a) >= d) }; };
+    const foesUp = () => foes.filter(f => f.state === "up");
+    const flags = { leader: false, half: false, lone: false };
+
+    function killPC(x, why) { x.state = "dead"; x.stun = 0; x.hold = null; log(`${x.name} ${why}`, "death"); }
+    function breakPC(x) {
+      x.broke = true; x.hp = 0;
+      const r = die(4);
+      if (r === 1) { x.state = "down"; x.down = die(4); log(`${x.name} is Broken: falls unconscious for ${x.down} round${x.down > 1 ? "s" : ""}.`, "broken"); }
+      else if (r === 2) { x.state = "down"; x.down = die(4); x.maimed = true; log(`${x.name} is Broken: ${die(6) === 6 ? "loses an eye" : "a limb snaps"}, out for ${x.down} round${x.down > 1 ? "s" : ""}.`, "broken"); }
+      else if (r === 3) { x.hemo = true; log(`${x.name} is Broken: hemorrhaging, every test is now DR16.`, "broken"); }
+      else killPC(x, "is Broken, and the d4 says dead.");
+    }
+    function hurt(x, dmg, why) {
+      if (x.state === "dead") return;
+      if (dmg <= 0) { log(`${why}, but nothing gets through.`); return; }
+      if (x.hp - dmg <= 0 && x.state === "up") {
+        if (o.useShield && x.shield) { x.shield = false; log(`${why}: ${x.name} lets the shield shatter and takes nothing.`, "save"); return; }
+        if (o.useOmens && x.omens > 0) {
+          const red = die(6); x.omens--; dmg = Math.max(0, dmg - red);
+          log(`${x.name} spends an Omen: −${red} damage.`, "save");
+          if (dmg <= 0) { log(`${why}, but the Omen swallows it.`); return; }
+        }
+      }
+      const wasZero = x.hp <= 0;
+      x.hp -= dmg;
+      log(`${why}: ${dmg} damage, ${x.name} at ${x.hp} HP.`, "hit");
+      if (o.zeroBroken) {
+        if (x.hp <= 0) { if (wasZero) killPC(x, "is struck again while Broken and dies."); else breakPC(x); }
+      } else {
+        if (x.hp < 0) killPC(x, wasZero ? "is struck again while Broken and dies." : "drops below zero. Dead.");
+        else if (x.hp === 0) breakPC(x);
+      }
+    }
+    function applyEffect(x, a) {
+      const e = a.effect;
+      if (!e || e.type === "none" || x.state === "dead") return;
+      let resisted = false;
+      if (e.test === "chance") resisted = Math.random() * 100 >= (+e.dr || 0);
+      else if (e.test !== "none" && TEST_AB[e.test]) resisted = test(x, TEST_AB[e.test], +e.dr || 12).ok;
+      const what = e.type === "linger" ? (e.label || "afflicted") : EFFECTS[e.type].toLowerCase();
+      if (resisted) { log(`${x.name} resists (${what}).`); return; }
+      if (e.type === "damage") hurt(x, Math.max(0, roll(e.amount)), `${e.label || a.name} lingers in ${x.name}`);
+      else if (e.type === "stun") { const n = Math.max(1, roll(e.amount)); x.stun = Math.max(x.stun, n); log(`${x.name} is helpless ${n >= 50 ? "for the rest of the fight" : `for ${n} round${n > 1 ? "s" : ""}`}.`, "broken"); }
+      else if (e.type === "hold") { x.hold = { ab: TEST_AB[e.test] || "pre", dr: +e.dr || 12 }; log(`${x.name} is paralysed.`, "broken"); }
+      else if (e.type === "drain") { x.drain++; log(`${x.name} is drained: STR, AGI and PRE −${x.drain}.`, "broken"); }
+      else if (e.type === "linger") { x.linger.add(e.label || "afflicted"); log(`${x.name} carries away something foul: ${e.label || "afflicted"}.`, "broken"); }
+    }
+
+    function moraleRoll(filter, reason) {
+      const groups = new Map();
+      for (const f of foesUp()) if (filter(f)) { if (!groups.has(f.g)) groups.set(f.g, []); groups.get(f.g).push(f); }
+      for (const list of groups.values()) {
+        const def = list[0].def, m = def.morale;
+        const who = list.length > 1 ? `The ${def.name}s` : list[0].name;
+        if (m == null || m === "") { log(`${who} know${list.length > 1 ? "" : "s"} no fear (${reason}).`, "morale"); continue; }
+        const r = die(6) + die(6);
+        if (r > +m) {
+          const flee = die(6) <= 3;
+          list.forEach(f => f.state = flee ? "fled" : "surrendered");
+          log(`Morale (${reason}): 2d6 = ${r} over ${m}. ${who} ${flee ? "flee" : "surrender"}${list.length > 1 ? "" : "s"}.`, "morale");
+        } else log(`Morale (${reason}): 2d6 = ${r}, ${who} hold${list.length > 1 ? "" : "s"}.`, "morale");
+      }
+    }
+    function checkLone() {
+      if (!o.morale || flags.lone) return;
+      const up = foesUp();
+      if (up.length === 1 && up[0].hp <= up[0].max / 3) { flags.lone = true; moraleRoll(f => f === up[0], "alone and bleeding"); }
+    }
+    function foeFell(f) {
+      if (!o.morale) return;
+      if (f.leader && !flags.leader) { flags.leader = true; moraleRoll(() => true, "leader slain"); }
+      const gone = foes.filter(x => x.state !== "up").length;
+      if (!flags.half && foes.length > 1 && gone >= foes.length / 2) { flags.half = true; moraleRoll(() => true, "half their number gone"); }
+      checkLone();
+    }
+
+    function pcAttack(x, f, free) {
+      const ranged = !!x.p.ranged && x.weapon !== "d2";
+      const dr = x.hemo ? 16 : (+f.def.hitDR || 12) + (+x.p.atkMod || 0);
+      const nat = die(20), tot = nat + abil(x, ranged ? "pre" : "str");
+      const verb = free ? "strikes back at" : (ranged ? "shoots at" : "attacks");
+      if (nat === 1) {
+        if (x.weapon !== "d2") { x.weapon = "d2"; log(`${x.name} ${verb} ${f.name}: fumble! The weapon is lost, fists now (d2).`, "broken"); }
+        else log(`${x.name} ${verb} ${f.name}: fumble.`);
+        return;
+      }
+      if (nat !== 20 && tot < dr) { log(`${x.name} ${verb} ${f.name}: ${tot} vs DR${dr}, miss.`); return; }
+      let raw = roll(x.weapon);
+      if (nat === 20) { raw *= 2; if (f.armor > 0) f.armor--; }
+      const absorb = f.armor > 0 ? die(ARMOR_DIE[f.armor]) : 0;
+      const dmg = Math.max(0, raw - absorb);
+      f.hp -= dmg;
+      const fragile = +f.def.fragile > 0 && dmg >= +f.def.fragile && f.hp > 0;
+      if (fragile) f.hp = 0;
+      log(`${x.name} ${verb} ${f.name}: ${nat === 20 ? "CRIT! " : ""}${dmg} damage${absorb ? ` (armor ate ${Math.min(absorb, raw)})` : ""}${fragile ? ", shattering it" : ""}.`, f.hp <= 0 ? "kill" : "plain");
+      if (f.hp <= 0) { f.state = "dead"; log(`${f.name} is dead.`, "kill"); foeFell(f); }
+      else checkLone();
+    }
+
+    function foeAttack(f, x, a, helpless) {
+      let mult = 1, fumbled = false;
+      if (!a.alwaysHits && !helpless) {
+        const dr = x.hemo ? 16 : (+f.def.defDR || 12) + ((+x.p.armor || 0) >= 2 ? 2 : 0) + (+x.p.defMod || 0);
+        const nat = die(20), tot = nat + abil(x, "agi");
+        if (nat === 20) {
+          log(`${f.name} swings ${a.name.toLowerCase()} at ${x.name}: perfect defence!`, "save");
+          if (x.state === "up" && !x.stun && !x.hold) pcAttack(x, f, true);
+          return;
+        }
+        if (nat === 1) { mult = 2; fumbled = true; }
+        else if (tot >= dr) { log(`${f.name} → ${x.name}: ${tot} vs DR${dr}, defended.`); return; }
+      }
+      let raw = roll(a.dmg) * mult;
+      let absorb = x.armor > 0 ? die(ARMOR_DIE[x.armor]) : 0;
+      if (x.shield) absorb += 1;
+      if (fumbled && x.armor > 0) { x.armor--; }
+      const how = a.alwaysHits ? "(cannot be dodged)" : helpless ? "(helpless)" : fumbled ? "(defence fumbled, double damage, armor cracks)" : "";
+      hurt(x, Math.max(0, raw - absorb), `${f.name}'s ${a.name.toLowerCase()} hits ${x.name}${how ? " " + how : ""}`);
+      if (x.state !== "dead") applyEffect(x, a);
+    }
+
+    function chooseTarget(list, policy) {
+      if (policy === "weakest") return list.reduce((b, c) => (c.hp < b.hp ? c : b), list[0]);
+      return list[Math.floor(Math.random() * list.length)];
+    }
+
+    function pcTurn() {
+      for (const x of pcs) {
+        if (x.state !== "up") continue;
+        const up = foesUp();
+        if (!up.length) return;
+        if (x.stun > 0) { x.stun--; log(`${x.name} cannot act.`); continue; }
+        if (x.hold) {
+          const t = test(x, x.hold.ab, x.hold.dr);
+          if (t.ok) { x.hold = null; log(`${x.name} tears free of the paralysis.`, "save"); } else log(`${x.name} strains against the paralysis.`);
+          continue;
+        }
+        if (x.frozen > 0) { x.frozen--; log(`${x.name} is frozen with fear.`); continue; }
+        pcAttack(x, chooseTarget(up, o.pcTarget), false);
+      }
+    }
+    function foeTurn() {
+      for (const f of foes) {
+        if (f.state !== "up") continue;
+        const n = Math.max(1, Math.floor(+f.def.perRound || 1));
+        for (let k = 0; k < n; k++) {
+          let targets = pcs.filter(x => x.state === "up"), helpless = false;
+          if (!targets.length) { targets = pcs.filter(x => x.state === "down"); helpless = true; }
+          if (!targets.length) return;
+          const x = chooseTarget(targets, o.foeTarget);
+          const a = f.weapon || pickAttack(f.def);
+          if (!a) break;
+          foeAttack(f, x, a, helpless || x.stun > 0 || !!x.hold);
+        }
+      }
+    }
+
+    // ---- start of the fight ----
+    const defs = [...new Set(foes.map(f => f.def))];
+    for (const def of defs) {
+      if (def.fear && def.fear.on) {
+        for (const x of pcs) {
+          if (!test(x, "pre", +def.fear.dr || 12).ok) { const n = Math.max(1, roll(def.fear.rounds)); x.frozen = Math.max(x.frozen, n); log(`${x.name} meets the ${def.name}'s gaze and freezes for ${n} round${n > 1 ? "s" : ""}.`, "broken"); }
+        }
+      }
+      if (def.ambush && def.ambush.on && pcs.length) {
+        const watcher = pcs.reduce((b, c) => ((+c.p.pre || 0) > (+b.p.pre || 0) ? c : b), pcs[0]);
+        const f = foes.find(y => y.def === def);
+        if (test(watcher, "pre", +def.ambush.dr || 14).ok) log(`${watcher.name} spots the ${def.name} ambush.`, "save");
+        else {
+          const x = pcs[Math.floor(Math.random() * pcs.length)];
+          const a = f.weapon || pickAttack(def);
+          if (a) {
+            let raw = roll(a.dmg) + (+def.ambush.bonus || 0);
+            const absorb = (x.armor > 0 ? die(ARMOR_DIE[x.armor]) : 0) + (x.shield ? 1 : 0);
+            hurt(x, Math.max(0, raw - absorb), `Ambush! ${f.name} backstabs ${x.name}`);
+          }
+        }
+      }
+    }
+
+    const alwaysFirst = foes.some(f => f.def.alwaysFirst);
+    let foesFirst = true, outcome = "stalemate";
+    const MAX_ROUNDS = 40;
+    const over = () => {
+      if (!foesUp().length) return "victory";
+      if (!pcs.some(x => x.state !== "dead")) return "defeat";
+      return null;
+    };
+    if (!foes.length || !pcs.length) outcome = foes.length ? "defeat" : "victory";
+    else {
+      const early = over();
+      if (early) outcome = early;
+      else {
+        outer:
+        for (R = 1; R <= MAX_ROUNDS; R++) {
+          if (R === 1 || o.initEachRound) foesFirst = alwaysFirst || die(6) <= 3;
+          if (L) L.push({ t: `Round ${R}: ${foesFirst ? "enemies" : "the party"} first`, k: "round" });
+          for (const x of pcs) {
+            if (x.state === "down") { x.down--; if (x.down <= 0) { x.state = "up"; x.hp = Math.min(x.max, die(4)); log(`${x.name} staggers back up with ${x.hp} HP.`, "save"); } }
+          }
+          for (const turn of foesFirst ? [foeTurn, pcTurn] : [pcTurn, foeTurn]) {
+            turn();
+            const end = over();
+            if (end) { outcome = end; break outer; }
+          }
+        }
+        if (R > MAX_ROUNDS) R = MAX_ROUNDS;
+      }
+    }
+    for (const x of pcs) if (x.hemo && x.state !== "dead" && outcome !== "victory") killPC(x, "bleeds out where they fell.");
+
+    if (L) {
+      const alive = pcs.filter(x => x.state !== "dead").length;
+      const broke = foes.filter(f => f.state === "fled" || f.state === "surrendered").length;
+      L.push({ t: outcome === "victory" ? `The party prevails after ${R} round${R > 1 ? "s" : ""}. ${alive} of ${pcs.length} still breathing${broke ? `, ${broke} foe${broke > 1 ? "s" : ""} broke` : ""}.` : outcome === "defeat" ? `Round ${R}: the party is dead. The dark keeps them.` : `Still fighting after ${MAX_ROUNDS} rounds. Called a stalemate.`, k: "end" });
+    }
+    return {
+      outcome, rounds: R, log: L,
+      brokeMorale: outcome === "victory" && foes.some(f => f.state === "fled" || f.state === "surrendered"),
+      pcs: pcs.map(x => ({ dead: x.state === "dead", broken: x.broke, hemo: x.hemo && x.state !== "dead", lost: x.state === "dead" ? x.max : Math.max(0, x.max - Math.max(0, x.hp)), linger: [...x.linger] })),
+    };
+  }
+  const findCreatureIn = (state, id) => state.bestiary.find(c => c.id === id);
+
+  function runMany(state) {
+    const n = Math.max(1, Math.min(50000, Math.floor(+state.settings.runs || 2000)));
+    const P = state.party.length;
+    const agg = { n, win: 0, winBroke: 0, loss: 0, stale: 0, anyDeath: 0, deaths: 0, rounds: 0, hist: Array(P + 1).fill(0), pcs: state.party.map(() => ({ dead: 0, broken: 0, hemo: 0, lostAll: 0, lostSurv: 0, surv: 0, linger: {} })) };
+    for (let i = 0; i < n; i++) {
+      const r = simulate(state, false);
+      if (r.outcome === "victory") { agg.win++; if (r.brokeMorale) agg.winBroke++; }
+      else if (r.outcome === "defeat") agg.loss++;
+      else agg.stale++;
+      agg.rounds += r.rounds;
+      let d = 0;
+      r.pcs.forEach((x, j) => {
+        const a = agg.pcs[j];
+        if (x.dead) { a.dead++; d++; } else { a.surv++; a.lostSurv += x.lost; }
+        if (x.broken) a.broken++;
+        if (x.hemo) a.hemo++;
+        a.lostAll += x.lost;
+        for (const l of x.linger) a.linger[l] = (a.linger[l] || 0) + 1;
+      });
+      agg.deaths += d;
+      if (d > 0) agg.anyDeath++;
+      agg.hist[d]++;
+    }
+    return agg;
+  }
+
+  /* ---------------- rendering ---------------- */
+  const armorOptions = sel => ARMOR_LONG.map((l, i) => `<option value="${i}"${+sel === i ? " selected" : ""}>${l}</option>`).join("");
+  const opts = (map, sel) => Object.entries(map).map(([v, l]) => `<option value="${v}"${sel === v ? " selected" : ""}>${esc(l)}</option>`).join("");
+  const diceClass = v => parseDice(v).ok ? "" : " bad";
+
+  function statLine(c) {
+    const attacks = (c.attacks || []).map(a => `${a.name} ${a.dmg}`).join(" or ");
+    return `HP ${c.hp} · Morale ${c.morale == null || c.morale === "" ? "–" : c.morale} · ${ARMOR_SHORT[+c.armor || 0]} · ${attacks || "no attacks"}${+c.perRound > 1 ? ` ×${c.perRound}` : ""}`;
+  }
+
+  function renderList() {
+    $("#creatureList").innerHTML = st.bestiary.map(c => `<li><button class="creature${c.id === st.sel ? " is-sel" : ""}" id="cl-${c.id}" data-act="select" data-id="${c.id}" aria-pressed="${c.id === st.sel}"><span class="cname">${esc(c.name || "Nameless thing")}</span><span class="cline">${esc(statLine(c))}</span></button></li>`).join("");
+  }
+
+  function renderEditor() {
+    const c = findCreature(st.sel);
+    const el = $("#editor");
+    if (!c) { el.innerHTML = `<p class="muted">Pick a creature on the left, or stat a new one.</p>`; return; }
+    const id = c.id;
+    const inEnc = st.encounter.some(e => e.enemyId === id);
+    el.innerHTML = `
+      <div data-scope="creature" data-id="${id}" class="editor">
+        <div class="row" style="justify-content:space-between;align-items:end">
+          <label class="field" style="flex:1 1 260px"><span>Name</span><input class="inp name" id="c-${id}-name" data-k="name" value="${esc(c.name)}"></label>
+          ${c.source ? `<span class="tag" title="Page in the Bare Bones edition">${esc(c.source)}</span>` : ""}
+        </div>
+        <div class="statline">
+          <label class="field"><span>HP</span><input class="inp${diceClass(c.hp)}" id="c-${id}-hp" data-k="hp" data-dice value="${esc(c.hp)}"></label>
+          <label class="field"><span>Morale (blank = none)</span><input class="inp" id="c-${id}-morale" data-k="morale" data-t="optnum" type="number" min="2" max="12" value="${c.morale == null ? "" : esc(c.morale)}"></label>
+          <label class="field"><span>Armor</span><select class="inp" id="c-${id}-armor" data-k="armor" data-t="num">${armorOptions(c.armor)}</select></label>
+          <label class="field"><span>DR to hit it</span><input class="inp" id="c-${id}-hitDR" data-k="hitDR" data-t="num" type="number" min="1" max="20" value="${esc(c.hitDR)}"></label>
+          <label class="field"><span>DR to defend</span><input class="inp" id="c-${id}-defDR" data-k="defDR" data-t="num" type="number" min="1" max="20" value="${esc(c.defDR)}"></label>
+          <label class="field"><span>Attacks / round</span><input class="inp" id="c-${id}-perRound" data-k="perRound" data-t="num" type="number" min="1" max="10" value="${esc(c.perRound)}"></label>
+        </div>
+
+        <div>
+          <p class="sub">Attacks</p>
+          <div class="table-scroll">
+            <table class="attacks">
+              <thead><tr><th>Attack</th><th>Damage</th><th title="Relative chance this attack is used">Weight</th><th>Undodgeable</th><th>On hit</th><th>Save</th><th>DR / %</th><th>Amount / name</th><th></th></tr></thead>
+              <tbody>
+              ${(c.attacks || []).map(a => {
+                const e = a.effect || fx("none");
+                const needsAmount = e.type === "damage" || e.type === "stun";
+                const needsLabel = e.type === "linger";
+                const noTest = e.type === "none";
+                return `<tr data-scope="attack" data-cid="${id}" data-aid="${a.id}">
+                  <td><input class="inp" id="a-${a.id}-name" data-k="name" value="${esc(a.name)}" aria-label="Attack name" style="min-width:140px"></td>
+                  <td><input class="inp${diceClass(a.dmg)}" id="a-${a.id}-dmg" data-k="dmg" data-dice value="${esc(a.dmg)}" aria-label="Damage dice" style="width:70px"></td>
+                  <td><input class="inp" id="a-${a.id}-weight" data-k="weight" data-t="num" type="number" min="0" value="${esc(a.weight)}" aria-label="Weight" style="width:56px"></td>
+                  <td><label class="check"><input type="checkbox" id="a-${a.id}-alwaysHits" data-k="alwaysHits"${a.alwaysHits ? " checked" : ""}> <span class="muted">always hits</span></label></td>
+                  <td><select class="inp" id="a-${a.id}-etype" data-k="effect.type" aria-label="Effect on hit">${opts(EFFECTS, e.type)}</select></td>
+                  <td>${noTest ? `<span class="muted">–</span>` : `<select class="inp" id="a-${a.id}-etest" data-k="effect.test" aria-label="Saving test">${opts(TESTS, e.test)}</select>`}</td>
+                  <td>${noTest || e.test === "none" ? `<span class="muted">–</span>` : `<input class="inp" id="a-${a.id}-edr" data-k="effect.dr" data-t="num" type="number" min="0" max="100" value="${esc(e.dr)}" aria-label="DR or percent" style="width:56px">`}</td>
+                  <td>${needsAmount ? `<input class="inp${diceClass(e.amount)}" id="a-${a.id}-eamt" data-k="effect.amount" data-dice value="${esc(e.amount)}" aria-label="${e.type === "stun" ? "Rounds, 99 for the whole fight" : "Extra damage dice"}" title="${e.type === "stun" ? "Rounds (99 = rest of fight)" : "Extra damage"}" style="width:64px">` : needsLabel ? `<input class="inp" id="a-${a.id}-elabel" data-k="effect.label" value="${esc(e.label)}" aria-label="Affliction name" placeholder="infected" style="width:120px">` : `<span class="muted">–</span>`}</td>
+                  <td><button class="btn small ghost danger" data-act="delAttack" id="a-${a.id}-del" aria-label="Remove ${esc(a.name)}">✕</button></td>
+                </tr>`;
+              }).join("")}
+              </tbody>
+            </table>
+          </div>
+          <div class="row" style="margin-top:8px">
+            <button class="btn small ghost" data-act="addAttack" id="c-${id}-addAttack">Add attack</button>
+            <label class="field" style="width:auto"><span>Which attack each time</span>
+              <select class="inp" id="c-${id}-weaponMode" data-k="weaponMode">${opts({ each: "Rolled by weight for every attack", once: "Rolled once per creature (its weapon)" }, c.weaponMode)}</select></label>
+          </div>
+        </div>
+
+        <div class="specials">
+          <p class="sub">Specials</p>
+          <div class="special">
+            <label class="check"><input type="checkbox" id="c-${id}-alwaysFirst" data-k="alwaysFirst"${c.alwaysFirst ? " checked" : ""}> Always wins initiative</label>
+          </div>
+          <div class="special">
+            <span>Destroyed outright by a single hit of</span>
+            <input class="inp" id="c-${id}-fragile" data-k="fragile" data-t="num" type="number" min="0" value="${esc(c.fragile)}" aria-label="Damage threshold">
+            <span class="muted">or more damage (0 = off)</span>
+          </div>
+          <div class="special">
+            <label class="check"><input type="checkbox" id="c-${id}-fearOn" data-k="fear.on"${c.fear.on ? " checked" : ""}> Terrifying: at the start, every PC tests Presence DR</label>
+            <input class="inp" id="c-${id}-fearDr" data-k="fear.dr" data-t="num" type="number" min="1" max="20" value="${esc(c.fear.dr)}" aria-label="Fear DR">
+            <span>or is frozen for</span>
+            <input class="inp${diceClass(c.fear.rounds)}" id="c-${id}-fearRounds" data-k="fear.rounds" data-dice value="${esc(c.fear.rounds)}" aria-label="Frozen rounds">
+            <span>rounds</span>
+          </div>
+          <div class="special">
+            <label class="check"><input type="checkbox" id="c-${id}-ambushOn" data-k="ambush.on"${c.ambush.on ? " checked" : ""}> Ambusher: the most perceptive PC tests Presence DR</label>
+            <input class="inp" id="c-${id}-ambushDr" data-k="ambush.dr" data-t="num" type="number" min="1" max="20" value="${esc(c.ambush.dr)}" aria-label="Ambush DR">
+            <span>or a random PC takes a free hit +</span>
+            <input class="inp" id="c-${id}-ambushBonus" data-k="ambush.bonus" data-t="num" type="number" min="0" value="${esc(c.ambush.bonus)}" aria-label="Backstab bonus damage">
+          </div>
+        </div>
+
+        <div class="editor-actions">
+          <div class="row">
+            <button class="btn" data-act="addToEnc" id="c-${id}-toEnc">${inEnc ? "Add another to encounter" : "Add to encounter"}</button>
+            <button class="btn ghost" data-act="dupCreature" id="c-${id}-dup">Duplicate</button>
+          </div>
+          <button class="btn ghost danger" data-act="delCreature" id="c-${id}-delete">Delete creature</button>
+        </div>
+      </div>`;
+  }
+
+  function avgAttack(def) {
+    const list = def.attacks || [];
+    const tot = list.reduce((a, x) => a + Math.max(0, +x.weight || 0), 0);
+    if (!list.length) return 0;
+    if (tot <= 0) return diceAvg(list[0].dmg);
+    return list.reduce((a, x) => a + diceAvg(x.dmg) * Math.max(0, +x.weight || 0), 0) / tot;
+  }
+  function encSummaryHTML() {
+    let n = 0, hp = 0, attacks = 0, dmg = 0;
+    for (const en of st.encounter) {
+      const def = findCreature(en.enemyId); if (!def) continue;
+      const k = Math.max(0, Math.floor(+en.count || 0));
+      n += k; hp += k * diceAvg(def.hp); attacks += k * Math.max(1, +def.perRound || 1); dmg += k * Math.max(1, +def.perRound || 1) * avgAttack(def);
+    }
+    const php = st.party.reduce((a, p) => a + (+p.hp || 0), 0);
+    if (!n) return `No creatures yet. Add one below or from the bestiary.`;
+    return `<b>${n}</b> creature${n > 1 ? "s" : ""} · <b>${Math.round(hp)}</b> HP to chew through · <b>${attacks}</b> attack${attacks > 1 ? "s" : ""} a round · <b>${dmg.toFixed(1)}</b> damage a round if every blow lands, against a party of <b>${php}</b> HP`;
+  }
+  function renderEncounter() {
+    const rows = st.encounter.map((en, i) => {
+      const def = findCreature(en.enemyId);
+      return `<div class="enc-row" data-scope="enc" data-i="${i}">
+        <div class="stepper">
+          <button data-act="encDec" id="e-${i}-dec" aria-label="One fewer">−</button>
+          <input id="e-${i}-count" data-k="count" data-t="num" type="number" min="1" max="40" value="${esc(en.count)}" aria-label="How many">
+          <button data-act="encInc" id="e-${i}-inc" aria-label="One more">+</button>
+        </div>
+        <div class="enc-name">
+          <select class="inp" id="e-${i}-enemy" data-k="enemyId" aria-label="Creature">${st.bestiary.map(c => `<option value="${c.id}"${c.id === en.enemyId ? " selected" : ""}>${esc(c.name)}</option>`).join("")}</select>
+          <span class="enc-line">${def ? esc(statLine(def)) : ""}</span>
+        </div>
+        <label class="check"><input type="checkbox" id="e-${i}-leader" data-k="leader"${en.leader ? " checked" : ""}> Leader</label>
+        <button class="btn small ghost danger" data-act="encDel" id="e-${i}-del">Remove</button>
+      </div>`;
+    }).join("");
+    $("#encounter").innerHTML = `
+      <div class="enc-rows">${rows}</div>
+      <p class="enc-summary" id="encSummary">${encSummaryHTML()}</p>
+      <div class="row enc-add">
+        <select class="inp" id="encAddSel" aria-label="Creature to add">${st.bestiary.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join("")}</select>
+        <button class="btn" data-act="encAdd" id="btn-enc-add">Add to encounter</button>
+      </div>`;
+  }
+
+  function renderParty() {
+    $("#party").innerHTML = st.party.map(p => `
+      <div class="pc" data-scope="pc" data-id="${p.id}">
+        <div class="pc-id">
+          <input class="inp name" id="p-${p.id}-name" data-k="name" value="${esc(p.name)}" aria-label="Character name">
+          <span class="pc-cls">${esc(p.cls || "")}</span>
+        </div>
+        <div class="pc-fields">
+          <label class="field"><span>HP</span><input class="inp" id="p-${p.id}-hp" data-k="hp" data-t="num" type="number" min="1" value="${esc(p.hp)}"></label>
+          <label class="field"><span>Strength</span><input class="inp" id="p-${p.id}-str" data-k="str" data-t="num" type="number" min="-3" max="6" value="${esc(p.str)}"></label>
+          <label class="field"><span>Agility</span><input class="inp" id="p-${p.id}-agi" data-k="agi" data-t="num" type="number" min="-3" max="6" value="${esc(p.agi)}"></label>
+          <label class="field"><span>Presence</span><input class="inp" id="p-${p.id}-pre" data-k="pre" data-t="num" type="number" min="-3" max="6" value="${esc(p.pre)}"></label>
+          <label class="field"><span>Toughness</span><input class="inp" id="p-${p.id}-tou" data-k="tou" data-t="num" type="number" min="-3" max="6" value="${esc(p.tou)}"></label>
+          <label class="field"><span>Omens</span><input class="inp" id="p-${p.id}-omens" data-k="omens" data-t="num" type="number" min="0" value="${esc(p.omens)}"></label>
+          <label class="field wide"><span>Weapon</span><input class="inp" id="p-${p.id}-weaponName" data-k="weaponName" value="${esc(p.weaponName)}"></label>
+          <label class="field"><span>Damage</span><input class="inp${diceClass(p.weapon)}" id="p-${p.id}-weapon" data-k="weapon" data-dice value="${esc(p.weapon)}"></label>
+          <label class="field"><span>Attack with</span><select class="inp" id="p-${p.id}-ranged" data-k="ranged" data-t="bool"><option value="false"${!p.ranged ? " selected" : ""}>Melee · STR</option><option value="true"${p.ranged ? " selected" : ""}>Ranged · PRE</option></select></label>
+          <label class="field wide"><span>Armor</span><select class="inp" id="p-${p.id}-armor" data-k="armor" data-t="num">${armorOptions(p.armor)}</select></label>
+          <label class="field"><span>Shield</span><select class="inp" id="p-${p.id}-shield" data-k="shield" data-t="bool"><option value="false"${!p.shield ? " selected" : ""}>None</option><option value="true"${p.shield ? " selected" : ""}>−1 dmg</option></select></label>
+          <label class="field"><span>Attack DR ±</span><input class="inp" id="p-${p.id}-atkMod" data-k="atkMod" data-t="num" type="number" value="${esc(p.atkMod)}"></label>
+          <label class="field"><span>Defence DR ±</span><input class="inp" id="p-${p.id}-defMod" data-k="defMod" data-t="num" type="number" value="${esc(p.defMod)}"></label>
+        </div>
+        <div class="pc-actions">
+          <button class="btn small ghost" data-act="pcReroll" id="p-${p.id}-reroll" title="Reroll as a new ${esc(p.cls || "wanderer")}">Reroll</button>
+          <button class="btn small ghost danger" data-act="pcDel" id="p-${p.id}-del">Remove</button>
+        </div>
+      </div>`).join("") || `<p class="muted" style="padding:12px 0">Nobody is walking into this. Roll a wanderer.</p>`;
+    $("#newPcClass").innerHTML = Object.entries(CLASSES).map(([k, v]) => `<option value="${k}"${st.newClass === k ? " selected" : ""}>${esc(v.label)}</option>`).join("");
+  }
+
+  function renderSettings() {
+    const s = st.settings;
+    $("#settings").innerHTML = `
+      <div data-scope="set">
+        <div class="settings">
+          <label class="field"><span>Fights to simulate</span><select class="inp" id="s-runs" data-k="runs" data-t="num">${[500, 2000, 5000, 20000].map(v => `<option value="${v}"${+s.runs === v ? " selected" : ""}>${v.toLocaleString("en")}</option>`).join("")}</select></label>
+          <label class="field"><span>Initiative</span><select class="inp" id="s-init" data-k="initEachRound" data-t="bool"><option value="true"${s.initEachRound ? " selected" : ""}>Rolled every round</option><option value="false"${!s.initEachRound ? " selected" : ""}>Rolled once</option></select></label>
+          <label class="field"><span>Party strikes</span><select class="inp" id="s-pcTarget" data-k="pcTarget">${opts({ weakest: "The weakest foe", random: "A random foe" }, s.pcTarget)}</select></label>
+          <label class="field"><span>Enemies strike</span><select class="inp" id="s-foeTarget" data-k="foeTarget">${opts({ random: "A random PC", weakest: "The weakest PC" }, s.foeTarget)}</select></label>
+        </div>
+        <details class="rules" id="s-rules">
+          <summary>Rules &amp; tactics</summary>
+          <div class="toggles">
+            <label class="check"><input type="checkbox" id="s-morale" data-k="morale"${s.morale ? " checked" : ""}> Morale checks</label>
+            <small>When the leader dies, half the foes are gone, or a lone foe is at ⅓ HP. Over Morale on 2d6: flee or surrender.</small>
+            <label class="check"><input type="checkbox" id="s-shield" data-k="useShield"${s.useShield ? " checked" : ""}> Break shields to survive</label>
+            <small>A shield shatters to ignore a blow that would take its bearer to 0 HP or below.</small>
+            <label class="check"><input type="checkbox" id="s-omens" data-k="useOmens"${s.useOmens ? " checked" : ""}> Spend Omens on lethal blows</label>
+            <small>Lowers that damage by d6.</small>
+            <label class="check"><input type="checkbox" id="s-zero" data-k="zeroBroken"${s.zeroBroken ? " checked" : ""}> House rule: any drop to 0 or below is Broken</label>
+            <small>By the book, 0 HP is Broken and anything below is death.</small>
+          </div>
+        </details>
+        <button class="btn run" data-act="run" id="btn-run">Simulate ${(+s.runs).toLocaleString("en")} fights</button>
+      </div>`;
+  }
+
+  let lastAgg = null, lastSample = null;
+  const pct = (k, n) => {
+    const v = 100 * k / n;
+    if (v > 0 && v < 1) return "<1%";
+    if (v < 100 && v > 99) return ">99%";
+    return `${Math.round(v)}%`;
+  };
+
+  function renderResults() {
+    const el = $("#results");
+    const creatures = st.encounter.reduce((a, e) => a + (findCreature(e.enemyId) ? Math.max(0, +e.count || 0) : 0), 0);
+    if (!creatures) { el.innerHTML = `<p class="empty">Add at least one creature to the encounter to see the odds.</p>`; return; }
+    if (!st.party.length) { el.innerHTML = `<p class="empty">The party is empty. Roll a wanderer to send into the dark.</p>`; return; }
+    const a = lastAgg; if (!a) return;
+    const n = a.n;
+    const tpk = a.hist[a.hist.length - 1];
+    const survLost = a.pcs.map((p, i) => ({ p, i })).filter(x => x.p.surv > 0);
+    const avgLost = survLost.length ? survLost.reduce((s, x) => s + x.p.lostSurv / x.p.surv, 0) / survLost.length : 0;
+    const mostDeadly = a.pcs.reduce((b, p, i) => (p.dead > a.pcs[b].dead ? i : b), 0);
+    const maxH = Math.max(...a.hist, 1);
+
+    const headline = a.win === n
+      ? `The party prevails in <b>every</b> one of ${n.toLocaleString("en")} fights, and someone dies in <b class="dead">${pct(a.anyDeath, n)}</b> of them.`
+      : `The party prevails in <b>${pct(a.win, n)}</b> of ${n.toLocaleString("en")} fights. Someone dies in <b class="dead">${pct(a.anyDeath, n)}</b>.`;
+
+    const winKill = a.win - a.winBroke;
+    el.innerHTML = `
+      <p class="headline">${headline}</p>
+      <div class="figures">
+        <div class="fig"><div class="fig-v y">${pct(a.win, n)}</div><div class="fig-l">Party prevails</div></div>
+        <div class="fig"><div class="fig-v r">${pct(a.anyDeath, n)}</div><div class="fig-l">At least one dies</div></div>
+        <div class="fig"><div class="fig-v">${pct(tpk, n)}</div><div class="fig-l">Everyone dies</div></div>
+        <div class="fig"><div class="fig-v">${avgLost.toFixed(1)}</div><div class="fig-l">HP lost per survivor, avg</div></div>
+      </div>
+
+      <div class="block">
+        <h3>How the fights end</h3>
+        <div class="stack" role="img" aria-label="Outcomes: ${pct(winKill, n)} slaughtered the foes, ${pct(a.winBroke, n)} foes broke, ${pct(a.loss, n)} party died, ${pct(a.stale, n)} stalemate">
+          <span class="s-kill" style="width:${100 * winKill / n}%"></span><span class="s-broke" style="width:${100 * a.winBroke / n}%"></span><span class="s-loss" style="width:${100 * a.loss / n}%"></span><span class="s-stale" style="width:${100 * a.stale / n}%"></span>
+        </div>
+        <div class="legend">
+          <span><i class="s-kill"></i>Foes slain <b>${pct(winKill, n)}</b></span>
+          <span><i class="s-broke"></i>Foes broke <b>${pct(a.winBroke, n)}</b></span>
+          <span><i class="s-loss"></i>Party dead <b>${pct(a.loss, n)}</b></span>
+          ${a.stale ? `<span><i class="s-stale"></i>Stalemate <b>${pct(a.stale, n)}</b></span>` : ""}
+        </div>
+      </div>
+
+      <div class="block">
+        <h3>Bodies per fight</h3>
+        <div class="hist">${a.hist.map((h, i) => `<div class="hbar ${i === 0 ? "zero" : "some"}"><span class="val">${pct(h, n)}</span><span class="bar" style="height:${(100 * h / maxH) * 0.82}%"></span></div>`).join("")}</div>
+        <div class="hlabels">${a.hist.map((_, i) => `<span>${i === 0 ? "none" : i}</span>`).join("")}</div>
+      </div>
+
+      <div class="block">
+        <h3>Each wanderer</h3>
+        <table class="pcs">
+          <thead><tr><th>Name</th><th>Dies</th><th>Broken</th><th title="Average HP lost in fights they survive">HP lost*</th></tr></thead>
+          <tbody>
+          ${st.party.map((p, i) => {
+            const s = a.pcs[i]; if (!s) return "";
+            const lost = s.surv ? s.lostSurv / s.surv : 0;
+            const maxHp = Math.max(1, +p.hp || 1);
+            return `<tr><td class="nm">${esc(p.name)}<div class="lossbar" aria-hidden="true"><span style="width:${Math.min(100, 100 * lost / maxHp)}%"></span></div></td><td class="${i === mostDeadly && s.dead ? "r" : ""}">${pct(s.dead, n)}</td><td>${pct(s.broken, n)}</td><td>${s.surv ? `${lost.toFixed(1)} / ${maxHp}` : "–"}</td></tr>`;
+          }).join("")}
+          </tbody>
+        </table>
+        <p class="afflict">* Average HP lost in the fights that PC survives. The bar shows it as a share of their max HP.</p>
+        ${afflictions(a)}
+        <div class="foot-stats">
+          <span>Fights last <b>${(a.rounds / n).toFixed(1)}</b> rounds on average</span>
+          <span><b>${(a.deaths / n).toFixed(2)}</b> deaths per fight</span>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="log-head">
+          <h3>One of those fights</h3>
+          <button class="btn small ghost" data-act="sample" id="btn-sample">Show another</button>
+        </div>
+        <ol class="log">${lastSample ? lastSample.log.map(l => `<li class="${l.k}">${esc(l.t)}</li>`).join("") : ""}</ol>
+      </div>`;
+  }
+  function afflictions(a) {
+    const lines = [];
+    st.party.forEach((p, i) => {
+      const s = a.pcs[i]; if (!s) return;
+      const parts = Object.entries(s.linger).map(([k, v]) => `${esc(k)} ${pct(v, a.n)}`);
+      if (s.hemo) parts.push(`hemorrhaging, needs treatment ${pct(s.hemo, a.n)}`);
+      if (parts.length) lines.push(`<b>${esc(p.name)}</b>: ${parts.join(" · ")}`);
+    });
+    return lines.length ? `<p class="afflict">Carried out of the fight:<br>${lines.join("<br>")}</p>` : "";
+  }
+
+  function runSim() {
+    lastAgg = runMany(st);
+    lastSample = simulate(st, true);
+    renderResults();
+  }
+  let simTimer = null;
+  const scheduleSim = () => { clearTimeout(simTimer); simTimer = setTimeout(runSim, 300); };
+
+  function withFocus(fn) {
+    const id = document.activeElement && document.activeElement.id;
+    fn();
+    if (id) { const el = document.getElementById(id); if (el) el.focus({ preventScroll: true }); }
+  }
+  function renderAll() { withFocus(() => { renderList(); renderEditor(); renderEncounter(); renderParty(); renderSettings(); }); }
+
+  /* ---------------- events ---------------- */
+  function scopeObj(el) {
+    const s = el.closest("[data-scope]"); if (!s) return null;
+    const d = s.dataset;
+    if (d.scope === "creature") return findCreature(d.id);
+    if (d.scope === "attack") { const c = findCreature(d.cid); return c && c.attacks.find(a => a.id === d.aid); }
+    if (d.scope === "pc") return st.party.find(p => p.id === d.id);
+    if (d.scope === "enc") return st.encounter[+d.i];
+    if (d.scope === "set") return st.settings;
+    return null;
+  }
+  function readVal(el) {
+    const t = el.dataset.t || "str";
+    if (el.type === "checkbox") return el.checked;
+    const v = el.value;
+    if (t === "bool") return v === "true";
+    if (t === "num") { const n = parseFloat(v); return Number.isFinite(n) ? n : 0; }
+    if (t === "optnum") { if (v.trim() === "") return null; const n = parseFloat(v); return Number.isFinite(n) ? n : null; }
+    return v;
+  }
+  function setPath(obj, path, v) {
+    const ks = path.split(".");
+    let x = obj;
+    for (let i = 0; i < ks.length - 1; i++) x = x[ks[i]];
+    x[ks[ks.length - 1]] = v;
+  }
+
+  document.addEventListener("input", e => {
+    const el = e.target;
+    if (!el.dataset || !el.dataset.k || el.type === "checkbox" || el.tagName === "SELECT") return;
+    const obj = scopeObj(el); if (!obj) return;
+    setPath(obj, el.dataset.k, readVal(el));
+    if (el.hasAttribute("data-dice")) el.classList.toggle("bad", !parseDice(el.value).ok);
+    const scope = el.closest("[data-scope]").dataset.scope;
+    if (scope === "creature" || scope === "attack") {
+      renderList();
+      document.querySelectorAll(".enc-row").forEach(row => {
+        const en = st.encounter[+row.dataset.i], def = en && findCreature(en.enemyId);
+        const line = row.querySelector(".enc-line"); if (def && line) line.textContent = statLine(def);
+        const opt = row.querySelector(`option[value="${st.sel}"]`); const c = findCreature(st.sel); if (opt && c) opt.textContent = c.name;
+      });
+    }
+    const sum = $("#encSummary"); if (sum) sum.innerHTML = encSummaryHTML();
+    save(); scheduleSim();
+  });
+
+  document.addEventListener("change", e => {
+    const el = e.target;
+    if (el.id === "newPcClass") { st.newClass = el.value; save(); return; }
+    if (!el.dataset || !el.dataset.k || !(el.type === "checkbox" || el.tagName === "SELECT")) return;
+    const obj = scopeObj(el); if (!obj) return;
+    const scope = el.closest("[data-scope]").dataset.scope;
+    if (scope === "enc" && el.dataset.k === "leader" && el.checked) st.encounter.forEach(x => x.leader = false);
+    setPath(obj, el.dataset.k, readVal(el));
+    if (scope === "attack" && el.dataset.k === "effect.type") {
+      const ef = obj.effect;
+      if (ef.type === "stun" && !parseDice(ef.amount).ok) ef.amount = "d4";
+      if (ef.type === "linger" && !ef.label) ef.label = "infected";
+    }
+    save();
+    withFocus(() => {
+      if (scope === "creature" || scope === "attack") { renderList(); renderEditor(); renderEncounter(); }
+      else if (scope === "enc") renderEncounter();
+      else if (scope === "pc") { renderParty(); const sum = $("#encSummary"); if (sum) sum.innerHTML = encSummaryHTML(); }
+      else if (scope === "set") { const open = $("#s-rules")?.open; renderSettings(); if (open) $("#s-rules").open = true; }
+    });
+    scheduleSim();
+  });
+
+  document.addEventListener("click", e => {
+    const btn = e.target.closest("[data-act]"); if (!btn) return;
+    const act = btn.dataset.act;
+    const scopeEl = btn.closest("[data-scope]");
+    const c = findCreature(st.sel);
+    let structural = true;
+    switch (act) {
+      case "select": st.sel = btn.dataset.id; withFocus(() => { renderList(); renderEditor(); }); save(); return;
+      case "newCreature": { const n = creature({ name: "New creature" }); st.bestiary.push(n); st.sel = n.id; break; }
+      case "dupCreature": if (c) { const copy = normalise({ bestiary: [JSON.parse(JSON.stringify(c))], party: [], encounter: [] }).bestiary[0]; copy.id = uid(); copy.name = `${c.name} (copy)`; copy.attacks.forEach(a => a.id = uid()); st.bestiary.push(copy); st.sel = copy.id; } break;
+      case "delCreature": if (c) { st.bestiary = st.bestiary.filter(x => x.id !== c.id); st.encounter = st.encounter.filter(x => x.enemyId !== c.id); st.sel = st.bestiary[0]?.id; } break;
+      case "resetBook": { const names = new Set(bookCreatures().map(b => b.name)); const kept = st.bestiary.filter(b => !names.has(b.name)); const fresh = bookCreatures(); const remap = {}; st.bestiary.forEach(b => { const f = fresh.find(x => x.name === b.name); if (f) remap[b.id] = f.id; }); st.bestiary = [...fresh, ...kept]; st.encounter.forEach(en => { if (remap[en.enemyId]) en.enemyId = remap[en.enemyId]; }); if (remap[st.sel]) st.sel = remap[st.sel]; if (!findCreature(st.sel)) st.sel = st.bestiary[0].id; break; }
+      case "addAttack": if (c) c.attacks.push(atk("New attack", "d4")); break;
+      case "delAttack": if (c) c.attacks = c.attacks.filter(a => a.id !== scopeEl.dataset.aid); break;
+      case "addToEnc": if (c) { const ex = st.encounter.find(x => x.enemyId === c.id); if (ex) ex.count = (+ex.count || 0) + 1; else st.encounter.push({ enemyId: c.id, count: 1, leader: false }); } break;
+      case "encInc": { const en = st.encounter[+scopeEl.dataset.i]; en.count = Math.min(40, (+en.count || 0) + 1); break; }
+      case "encDec": { const en = st.encounter[+scopeEl.dataset.i]; en.count = Math.max(1, (+en.count || 1) - 1); break; }
+      case "encDel": st.encounter.splice(+scopeEl.dataset.i, 1); break;
+      case "encAdd": { const id = $("#encAddSel").value; const ex = st.encounter.find(x => x.enemyId === id); if (ex) ex.count = (+ex.count || 0) + 1; else if (id) st.encounter.push({ enemyId: id, count: 1, leader: !st.encounter.length }); break; }
+      case "pcAdd": st.party.push(rollPC(st.newClass || "none")); break;
+      case "pcDel": st.party = st.party.filter(p => p.id !== scopeEl.dataset.id); break;
+      case "pcReroll": { const i = st.party.findIndex(p => p.id === scopeEl.dataset.id); if (i >= 0) { const key = Object.keys(CLASSES).find(k => CLASSES[k].label === st.party[i].cls) || "none"; const fresh = rollPC(key); fresh.id = st.party[i].id; st.party[i] = fresh; } break; }
+      case "run": clearTimeout(simTimer); runSim(); return;
+      case "sample": lastSample = simulate(st, true); renderResults(); $("#btn-sample")?.focus({ preventScroll: true }); return;
+      case "exportJson": $("#ioText").value = JSON.stringify(st, null, 1); $("#ioText").select(); $("#ioMsg").textContent = "Setup copied into the box. Save that text anywhere."; structural = false; break;
+      case "importJson":
+        try { st = normalise(JSON.parse($("#ioText").value)); $("#ioMsg").textContent = "Setup loaded."; }
+        catch (err) { $("#ioMsg").textContent = `Could not load: ${err.message}`; return; }
+        break;
+    }
+    if (!structural) return;
+    save(); renderAll(); scheduleSim();
+  });
+
+  renderAll();
+  runSim();
+})();
+</script>
