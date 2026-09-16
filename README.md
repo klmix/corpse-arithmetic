@@ -21,6 +21,8 @@ Not modelled: Powers and scrolls, fleeing player characters, healing mid-fight, 
 
 It's a single `index.html` with no build step. Open it in a browser. Setups are saved in your browser's local storage and can be copied out as JSON from "Save or share this setup".
 
+The hosted site counts page views with [GoatCounter](https://www.goatcounter.com/), which sets no cookies and collects no personal data.
+
 ---
 
 Corpse Arithmetic is an independent production and is not affiliated with Ockult Örtmästare Games or Stockholm Kartell. It is published under the MÖRK BORG Third Party License. MÖRK BORG is copyright Ockult Örtmästare Games and Stockholm Kartell.
